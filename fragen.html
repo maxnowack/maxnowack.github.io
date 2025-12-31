@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0d12" />
+  <title>100 Fragen</title>
+  <style>
+    :root{
+      --bg:#0b0d12;
+      --card:#121622;
+      --border: rgba(255,255,255,.10);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.58);
+      --accent:#7c5cff;
+      --danger:#ff4d6d;
+      --radius: 18px;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 20% -10%, rgba(124,92,255,.18), transparent 55%), var(--bg);
+    }
+
+    /* Full-height shell: header top, footer bottom, question centered */
+    .wrap{
+      height: 100dvh; /* echte volle Höhe, damit das Centering stimmt */
+      padding:
+        max(10px, env(safe-area-inset-top))
+        14px
+        max(10px, env(safe-area-inset-bottom));
+      display:flex;
+      justify-content:center;
+      align-items:stretch;
+    }
+
+    .app{
+      width: min(860px, 100%);
+      height: 100%;
+      display:grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 0;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 6px 2px 10px;
+    }
+
+    .title{
+      font-weight: 750;
+      letter-spacing: .2px;
+      font-size: clamp(16px, 2vw, 18px);
+      color: rgba(255,255,255,.84);
+    }
+
+    .progress{
+      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+      color: var(--muted);
+      white-space:nowrap;
+      user-select:none;
+    }
+
+    main{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 0;
+      min-height: 0; /* grid/flex edge case */
+    }
+
+    .card{
+      width: 100%;
+      max-width: 760px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(22px, 4.2vw, 44px);
+      word-break: break-word;
+    }
+
+    .question{
+      margin:0;
+      font-weight: 850;
+      letter-spacing: .1px;
+      line-height: 1.14;
+      font-size: clamp(26px, 4.6vw, 44px);
+      text-wrap: balance;
+      max-width: 34ch;
+    }
+
+    footer{
+      display:flex;
+      gap: 12px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      padding: 10px 2px 6px;
+    }
+
+    button{
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-weight: 780;
+      color: var(--text);
+      background: transparent;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      transition: transform .08s ease, background .2s ease, border-color .2s ease;
+      user-select:none;
+    }
+
+    button:active{ transform: translateY(1px); }
+
+    .primary{
+      background: rgba(124,92,255,.18);
+      border-color: rgba(124,92,255,.38);
+      min-width: min(360px, 100%);
+      padding: 16px 18px;
+      font-size: 17px;
+    }
+
+    .primary:hover{ background: rgba(124,92,255,.22); }
+
+    .reset{
+      color: rgba(255,255,255,.72);
+      border-color: rgba(255,255,255,.14);
+    }
+
+    .reset:hover{ background: rgba(255,255,255,.06); }
+
+    /* Modal */
+    .backdrop{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 16px;
+      background: rgba(0,0,0,.55);
+      z-index: 10;
+    }
+
+    .modal{
+      width:min(520px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .modal h2{ margin: 0 0 6px; font-size: 16px; letter-spacing:.2px; }
+    .modal p{ margin: 0 0 12px; color: var(--muted); line-height:1.4; }
+    .actions{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+
+    .danger{
+      border-color: rgba(255,77,109,.40);
+      background: rgba(255,77,109,.14);
+    }
+
+    .danger:hover{ background: rgba(255,77,109,.18); }
+
+    /* Mobile: maximize question area; controls hug edges */
+    @media (max-width: 520px){
+      .wrap{
+        height: 100dvh;
+        padding:
+          max(8px, env(safe-area-inset-top))
+          12px
+          max(8px, env(safe-area-inset-bottom));
+      }
+      header{ padding: 4px 2px 10px; }
+      footer{ padding: 10px 2px 4px; align-items:stretch; }
+      .primary, .reset{ width:100%; }
+      .primary{ padding: 18px 18px; font-size: 18px; }
+      .card{ padding: 26px 20px; }
+      .question{ font-size: clamp(30px, 7.2vw, 44px); line-height: 1.10; max-width: 30ch; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *{ transition:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="app" role="application" aria-label="100 Fragen">
+      <header>
+        <div class="title">100 Fragen</div>
+        <div class="progress" id="progress">0/0</div>
+      </header>
+
+      <main>
+        <div class="card" aria-live="polite" aria-atomic="true">
+          <h1 class="question" id="question">Tippe zum Starten auf „Nächste Frage“.</h1>
+        </div>
+      </main>
+
+      <footer>
+        <button class="primary" id="nextBtn">Nächste Frage</button>
+        <button class="reset" id="resetBtn">Reset</button>
+      </footer>
+    </div>
+  </div>
+
+  <div class="backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <h2 id="modalTitle">Reset?</h2>
+      <p>Alle bereits gezogenen Fragen werden gelöscht.</p>
+      <div class="actions">
+        <button class="reset" id="cancelReset">Abbrechen</button>
+        <button class="danger primary" id="confirmReset">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+
+    const QUESTIONS = [
+      "Was war der Moment im letzten Jahr, bei dem du dir gedacht hast: „Ich bin ein echtes Glückskind“?",
+      "Welcher Moment hat dir im vergangenen Jahr Lachtränen beschert – und vielleicht ein bisschen Atemnot?",
+      "Welches Ziel hast du erreicht, bei dem du heimlich gedacht hast: „Gut gemacht, ich!“?",
+      "Wer hat dir im letzten Jahr das Gefühl gegeben, ein echter VIP zu sein?",
+      "Was war die schlauste Entscheidung, die du letztes Jahr getroffen hast – vielleicht sogar klüger als du dachtest?",
+      "Was hast du im vergangenen Jahr ausprobiert, bei dem du dachtest: „Das hätte ich schon viel früher machen sollen“?",
+      "Welches Essen oder Getränk hat dir das Gefühl gegeben, im Himmel zu schlemmen?",
+      "Welche Freundschaft hat im letzten Jahr den Turbo eingelegt?",
+      "Wo warst du, als du dachtest: „Hier könnte ich ewig bleiben“?",
+      "Gibt es ein Lied, das dein Jahr perfekt beschreibt – oder das du einfach ständig im Ohr hattest?",
+      "Welches Geschenk war so gut, dass du kurz überlegt hast, ob du es verdient hast?",
+      "Was war der lustigste Moment im letzten Jahr – einer, den du niemandem beschreiben kannst, ohne dass er dabei sein musste?",
+      "Welcher Tag hat sich angefühlt, als wärst du heimlich im Urlaub gelandet?",
+      "Welcher kleine Erfolg hat dich im letzten Jahr heimlich vor Stolz grinsen lassen?",
+      "Was hat dich letztes Jahr so motiviert, dass du dich kurz wie ein Motivationscoach gefühlt hast?",
+      "Welches kleine Abenteuer hat dich so glücklich gemacht, dass es sich wie ein Film angefühlt hat?",
+      "Was hast du geschafft, bei dem du vorher dachtest: „Das klappt doch nie im Leben!“?",
+      "Welcher Moment in deinem Alltag hat dir gezeigt, dass auch die kleinen Dinge richtig toll sein können?",
+      "Was hat dich letztes Jahr so überrascht, dass du kurz innehalten musstest, um sicherzugehen, dass es echt ist?",
+      "Welcher Moment hat dir gezeigt, dass das Leben manchmal doch nett sein kann?",
+      "Welcher Film, welches Buch oder welche Serie hat dich letztes Jahr so begeistert, dass du nicht aufhören konntest, davon zu reden?",
+      "Welcher Moment mit deinen Liebsten war so schön, dass du ihn am liebsten in einer Schneekugel aufbewahren würdest?",
+      "Was war dein liebstes Ritual im letzten Jahr – und ja, Kaffee zählt als Ritual!",
+      "Welche Fähigkeit hast du letztes Jahr verbessert, bei der du dich jetzt fast wie ein Profi fühlst?",
+      "Gab es einen Moment, der dich so positiv überrascht hat, dass du dir gedacht hast: „Das Leben ist doch gar nicht so schlecht“?",
+      "Was lief im letzten Jahr so richtig daneben, dass du nur noch lachen konntest, weil’s so absurd war?",
+      "Was hat dich im vergangenen Jahr so genervt, dass du am liebsten in die Tischkante gebissen hättest?",
+      "Welche Entscheidung aus dem letzten Jahr lässt dich heute denken: „Was hab ich mir dabei bloß gedacht?“",
+      "Was hat dich im vergangenen Jahr so frustriert, dass du kurz davor warst, eine Flucht auf eine einsame Insel zu planen?",
+      "Welches Ziel hast du spektakulär in den Sand gesetzt – aber hey, du hast’s versucht?",
+      "Wann hast du dich so aufgeregt, dass du dich selbst wie ein explodierender Toaster gefühlt hast?",
+      "Wer oder was hat dich letztes Jahr enttäuscht, dass du fast die Hoffnung aufgeben wolltest?",
+      "Welche peinliche Situation aus dem letzten Jahr würdest du am liebsten in die Vergangenheit zurückschicken?",
+      "Gab es einen Streit, bei dem du am Ende dachtest: „Das war einfach nur albern“?",
+      "Welches Erlebnis war so anstrengend, dass du danach wie ein ausgelaugter Schwamm warst?",
+      "Was war die größte Herausforderung, bei der du dir jetzt denkst: „Hut ab, das hab ich echt geschafft“?",
+      "Gibt es etwas, das du im Nachhinein lieber anders gemacht hättest?",
+      "Wann warst du so überfordert, dass du kurz gedacht hast, dass ein Klon von dir echt praktisch wäre?",
+      "Was hat dich letztes Jahr im Alltag so ausgebremst, dass du dich wie ein Auto mit leerem Tank gefühlt hast?",
+      "Welcher Moment war so langweilig oder unnötig, dass du dir gedacht hast: „Das war pure Lebenszeitverschwendung“?",
+      "Gibt es etwas, das du dir oder anderen immer noch nicht verziehen hast, obwohl es vielleicht an der Zeit wäre?",
+      "Wann hast du ein Ziel aufgegeben, obwohl du eigentlich dachtest, dass du es schaffen könntest?",
+      "Gab es eine Situation, bei der du dir gedacht hast: „Das kann doch nicht euer Ernst sein!“?",
+      "Was war dein größter Stressfaktor im vergangenen Jahr, bei dem du fast einen Dauerschrei losgelassen hättest?",
+      "Gibt es einen Moment, der dir immer noch Bauchschmerzen bereitet, wenn du daran denkst?",
+      "Was war der wichtigste Moment im letzten Jahr, der dir gezeigt hat: „Das ist es, was zählt“?",
+      "Was hättest du ohne die Hilfe von anderen niemals geschafft?",
+      "Welche Lektion nimmst du mit, die fast schon wie ein Lebensratgeber klingt?",
+      "Wenn du das vergangene Jahr in einem Wort beschreiben müsstest, welches wäre es?",
+      "Welcher Moment wird dir so lange in Erinnerung bleiben, dass du ihn auch noch in 20 Jahren erzählen wirst?",
+      "Was möchtest du im nächsten Jahr ausprobieren, bei dem du dir denkst: „Wenn nicht jetzt, wann dann?“",
+      "Gibt es einen Traum, den du nächstes Jahr endlich aus der Schublade holen willst, bevor er Staub ansetzt?",
+      "Welche Reise steht ganz oben auf deiner Liste, die du dir nicht länger nur bei Instagram anschauen willst?",
+      "Was möchtest du lernen, nur um anderen zu zeigen, dass du’s drauf hast?",
+      "Welches Hobby möchtest du im kommenden Jahr entdecken, von dem du gar nicht wusstest, dass es dir Spaß machen könnte?",
+      "Welche schlechte Angewohnheit möchtest du loswerden – und diesmal wirklich?",
+      "Was möchtest du im nächsten Jahr öfter machen, weil es dir ein Dauergrinsen ins Gesicht zaubert?",
+      "Welche Freundschaft möchtest du wieder aufpolieren, weil sie einfach zu wertvoll ist?",
+      "Was möchtest du für deine Gesundheit tun, ohne dass es sich wie eine Strafe anfühlt?",
+      "Gibt es ein großes Ziel, auf das du nächstes Jahr richtig hinarbeiten willst?",
+      "Was möchtest du in deinem Zuhause verändern, damit es sich noch ein bisschen mehr nach „deinem Ort“ anfühlt?",
+      "Gibt es eine Tradition, die du nächstes Jahr ins Leben rufen möchtest, nur weil du es kannst?",
+      "Was möchtest du dir im nächsten Jahr gönnen, weil du es dir einfach verdient hast?",
+      "Gibt es einen Ort in deiner Nähe, den du endlich erkunden willst, bevor er wieder aus deinem Gedächtnis verschwindet?",
+      "Welche neue Fähigkeit möchtest du dir aneignen, die so cool ist, dass du damit angeben kannst?",
+      "Gibt es etwas, das du seit Jahren vor dir herschiebst und endlich anpacken möchtest?",
+      "Was möchtest du über dich selbst herausfinden, das dich schon länger neugierig macht?",
+      "Gibt es ein Ereignis, auf das du dich jetzt schon freust, weil du weißt, dass es legendär wird?",
+      "Was möchtest du bewusster genießen, damit es sich anfühlt, als würdest du die Zeit anhalten?",
+      "Welches Abenteuer möchtest du nächstes Jahr erleben, bei dem du weißt, dass es ein bisschen Nervenkitzel mitbringt?",
+      "Welche mutige Entscheidung möchtest du treffen, die dir vielleicht ein bisschen Angst macht, aber auch ziemlich aufregend ist?",
+      "Was möchtest du in deinem Alltag verändern, damit er ein bisschen weniger „08/15“ wird?",
+      "Welche Person möchtest du besser kennenlernen, weil du glaubst, dass sie dein Leben bereichern könnte?",
+      "Gibt es eine Grenze, die du im nächsten Jahr überschreiten möchtest – im positiven Sinne, versteht sich?",
+      "Was möchtest du mit deinen Liebsten unternehmen, das euch noch enger zusammenschweißt?",
+      "Welchen Traum aus deiner Kindheit möchtest du endlich in die Realität holen, weil es einfach Zeit wird?",
+      "Welche Idee möchtest du umsetzen, die schon länger in deinem Kopf herumschwirrt?",
+      "Welche Herausforderung möchtest du dir selbst stellen, einfach um zu sehen, ob du’s drauf hast?",
+      "Gibt es eine neue Sprache, die du lernen möchtest – oder zumindest ein paar Wörter, um den Eindruck zu erwecken?",
+      "Was möchtest du im nächsten Jahr anders machen, weil du weißt, dass es dich glücklicher macht?",
+      "Welches Abenteuer möchtest du erleben, bei dem du jetzt schon weißt, dass es eine gute Story wird?",
+      "Was möchtest du öfter wertschätzen, weil es dir das Leben so viel besser macht?",
+      "Gibt es etwas, das du im kommenden Jahr bewusster ignorieren möchtest, weil es dich nur stresst?",
+      "Welche neue Gewohnheit möchtest du dir aneignen, die dein Leben ein kleines bisschen einfacher macht?",
+      "Was möchtest du in deinem Zuhause so richtig aufpeppen, damit es sich nach dir anfühlt?",
+      "Gibt es jemanden, dem du nächstes Jahr endlich sagen willst, wie wichtig er oder sie dir ist?",
+      "Welches Projekt möchtest du nächstes Jahr angehen, das sich bisher zu groß angefühlt hat?",
+      "Was möchtest du öfter tun, weil es dir das Gefühl gibt, lebendig zu sein?",
+      "Gibt es etwas, das du nächstes Jahr zum ersten Mal ausprobieren willst – etwas völlig Neues?",
+      "Welche Art von Erinnerungen möchtest du nächstes Jahr schaffen, die dir ein Leben lang bleiben?",
+      "Gibt es einen Kurs, ein Event oder eine Aktivität, die du schon immer machen wolltest, aber immer verschoben hast?",
+      "Was möchtest du tun, um dich selbst zu überraschen – im positiven Sinne natürlich?",
+      "Gibt es ein Ziel, das du erreichen möchtest, auch wenn es sich gerade noch wie ein Berg anfühlt?",
+      "Welches Erlebnis möchtest du planen, bei dem du weißt, dass es dich mit Freude erfüllt?",
+      "Gibt es etwas, das du dir öfter erlauben möchtest, ohne dabei ein schlechtes Gewissen zu haben?",
+      "Was möchtest du tun, um dir und anderen zu zeigen, dass du’s drauf hast?",
+      "Welche Art von Abenteuer möchtest du erleben, bei der du noch keine Ahnung hast, wie sie ausgeht?",
+      "Gibt es jemanden, dem du deine Dankbarkeit zeigen möchtest, weil er oder sie es verdient hat?",
+      "Welches Erlebnis möchtest du auf deine „Lebensliste“ setzen und nächstes Jahr abhaken?",
+      "Welche Version von dir selbst möchtest du am Ende des nächsten Jahres im Spiegel sehen – mit einem Lächeln?"
+    ];
+
+    const STORAGE_KEY = "ny-100q-state-v2";
+
+    /** @typedef {{version:number, order:number[], cursor:number, lastShownIndex:number|null}} AppState */
+
+    const $ = (id) => document.getElementById(id);
+    const questionEl = $("question");
+    const progressEl = $("progress");
+    const nextBtn = $("nextBtn");
+    const resetBtn = $("resetBtn");
+
+    const modal = $("modal");
+    const cancelReset = $("cancelReset");
+    const confirmReset = $("confirmReset");
+
+    function safeParseJSON(str){ try{ return JSON.parse(str); } catch { return null; } }
+
+    function saveState(s){
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+      catch { /* ignore */ }
+    }
+
+    function loadState(){
+      let raw = null;
+      try{ raw = localStorage.getItem(STORAGE_KEY); } catch { raw = null; }
+      if(!raw) return null;
+      const p = safeParseJSON(raw);
+      if(!p || p.version !== 1) return null;
+      if(!Array.isArray(p.order) || typeof p.cursor !== "number") return null;
+      if(p.order.length !== QUESTIONS.length) return null;
+      return /** @type {AppState} */ (p);
+    }
+
+    function shuffle(arr){
+      for(let i = arr.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function freshState(){
+      const order = shuffle([...Array(QUESTIONS.length)].map((_,i)=>i));
+      /** @type {AppState} */
+      const s = { version: 1, order, cursor: 0, lastShownIndex: null };
+      saveState(s);
+      return s;
+    }
+
+    let state = loadState() || freshState();
+
+    function ensureIntegrity(){
+      const n = QUESTIONS.length;
+      const s = new Set(state.order);
+      const ok = state.order.length === n && s.size === n && [...s].every(v => Number.isInteger(v) && v >= 0 && v < n);
+      if(!ok) state = freshState();
+      if(!Number.isFinite(state.cursor) || state.cursor < 0) state.cursor = 0;
+      if(state.cursor > n) state.cursor = n;
+    }
+
+    function shown(){ return Math.min(state.cursor, QUESTIONS.length); }
+
+    function renderProgress(){
+      progressEl.textContent = `${shown()}/${QUESTIONS.length}`;
+    }
+
+    function renderQuestion(){
+      if(state.lastShownIndex == null){
+        questionEl.textContent = "Tippe zum Starten auf „Nächste Frage“.";
+        nextBtn.textContent = "Nächste Frage";
+        return;
+      }
+      questionEl.textContent = QUESTIONS[state.lastShownIndex];
+      nextBtn.textContent = (state.cursor >= QUESTIONS.length) ? "Nochmal" : "Nächste Frage";
+    }
+
+    function next(){
+      ensureIntegrity();
+
+      if(state.cursor >= QUESTIONS.length){
+        // restart
+        state = freshState();
+      }
+
+      const idx = state.order[state.cursor];
+      state.cursor += 1;
+      state.lastShownIndex = idx;
+      saveState(state);
+
+      renderProgress();
+      renderQuestion();
+    }
+
+    function openReset(){
+      modal.style.display = "flex";
+      cancelReset.focus();
+    }
+
+    function closeReset(){
+      modal.style.display = "none";
+      resetBtn.focus();
+    }
+
+    function resetAll(){
+      try{ localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+      state = freshState();
+      renderProgress();
+      renderQuestion();
+    }
+
+    // Events
+    nextBtn.addEventListener("click", next);
+    resetBtn.addEventListener("click", openReset);
+    cancelReset.addEventListener("click", closeReset);
+    confirmReset.addEventListener("click", () => { closeReset(); resetAll(); });
+
+    modal.addEventListener("click", (e) => { if(e.target === modal) closeReset(); });
+
+    document.addEventListener("keydown", (e) => {
+      if(e.key === "Escape" && modal.style.display === "flex") closeReset();
+      if((e.ctrlKey || e.metaKey) && e.key === "Enter") nextBtn.click();
+    });
+
+    // Boot
+    ensureIntegrity();
+    renderProgress();
+
+    // Resume last shown if any
+    if(state.lastShownIndex != null && shown() > 0 && state.lastShownIndex >= 0 && state.lastShownIndex < QUESTIONS.length){
+      renderQuestion();
+    } else {
+      state.lastShownIndex = null;
+      saveState(state);
+      renderQuestion();
+    }
+
+    // Red-team: if questions missing, fail safe.
+    if(QUESTIONS.length === 0){
+      questionEl.textContent = "Keine Fragen geladen.";
+      nextBtn.disabled = true;
+    }
+  </script>
+</body>
+</html>
